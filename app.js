@@ -143,7 +143,7 @@ const myReadFile = async (fileName) => {
         // send to readed only if it's a text file
         if (IsTextFile(file)) {
             filesNumber++;
-            myPromises.push(myReadFile(file))
+            myPromises.push(myReadFile( path.join(directoryPath,file)))
         }
     }
 
