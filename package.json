@@ -2,6 +2,7 @@
   "dependencies": {
     "@types/event-stream": "^4.0.1",
     "event-stream": "^4.0.1",
-    "performance-now": "^2.1.0"
+    "performance-now": "^2.1.0",
+    "textextensions": "^5.16.0"
   }
 }

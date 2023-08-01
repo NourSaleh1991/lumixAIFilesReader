@@ -1,13 +1,12 @@
-var fs = require('fs'); // for files and direcroeis read/write
-var es = require('event-stream'); // for handling async chuncks from the stream
-var now = require('performance-now'); // for timer for each file
-var path = require('path') // to check file extension
+const fs = require('fs'); // for files and direcroeis read/write
+const es = require('event-stream'); // for handling async chuncks from the stream
+const now = require('performance-now'); // for timer for each file
+const path = require('path') // to check file extension
+const textEnsionsList = require('textextensions').default
 
 // todo: 
 // 1- maybe change the general/public counters variables to a generator function and call it to display steps
 // 2- read RAM size and divide chunck according to the RAM when reading files to make sure we have enough to read the chuncks 
-
-
 
 // todo: maybe chnage it to be created after all promises resolved, and each promise should resolve a temp map for each file
 var hashMap = new Map(); // map to store the word counters
@@ -64,7 +63,7 @@ const checkDirectoryPath = (directory) => {
  */
 const IsTextFile = (file) => {
     try {
-        return path.extname(file) == ".txt";
+        return textEnsionsList.includes(path.extname(file).split(".")[1]);
     } catch (e) {
         console.log("\033[31mError\033[0m: Invalid file path");
         return false;
@@ -93,6 +92,7 @@ const checkInput = () => {
 const myReadFile = async (fileName) => {
     return new Promise((resolve, reject) => {
         let t0 = now();
+        let wordsProcessed = 0;
         console.log("processing file name: ", fileName);
         const stream = fs.createReadStream(fileName)
         //split lines 
@@ -100,6 +100,7 @@ const myReadFile = async (fileName) => {
             es.mapSync((line) => {
                 //split words by letters only 
                 line.match(/\p{L}+/gu)?.map((word) => {
+                    wordsProcessed++;
                     if (hashMap.has(word)) {
                         hashMap.set(word, hashMap.get(word) + 1);
                     } else {
@@ -119,9 +120,10 @@ const myReadFile = async (fileName) => {
             t1 = now();
             filesProcessed++;
             console.log(`Done processing file ` + fileName + ` in ` + (now() - t0).toFixed(3) + `ms`);
+            console.log("Words processed in this file: " + wordsProcessed);
+            console.log("Total unique words: " + hashMap.size);
+            console.log("Total errors: " + errors);
             console.log(filesProcessed + " of " + filesNumber + " files fully processed");
-            console.log("total words: " + hashMap.size);
-            console.log("total errors: " + errors);
             resolve();
         })
   
@@ -150,7 +152,10 @@ const myReadFile = async (fileName) => {
     // execute all promises, finally display the result map
     await Promise.allSettled(myPromises).finally(() => {
         console.log("list of words: ");
-        for (let [word, count] of hashMap) {
+
+        // sorted map
+        const sortedMap = new Map([...hashMap].sort((a, b) => b[1] - a[1]));
+        for (let [word, count] of sortedMap) {
             console.log(word + " => " + count + " times.");
         }
         console.log("done");
